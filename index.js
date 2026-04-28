@@ -1,5 +1,15 @@
 require("dotenv").config();
-const { Client, GatewayIntentBits, Events, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, SlashCommandBuilder, REST, Routes } = require("discord.js");
+const {
+  Client,
+  GatewayIntentBits,
+  Events,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+  ActionRowBuilder
+} = require("discord.js");
+
+const ALLOWED_CHANNEL_ID = "1498679528892141628";
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds],
@@ -15,13 +25,22 @@ client.on(Events.InteractionCreate, async (interaction) => {
   if (interaction.isChatInputCommand()) {
     if (interaction.commandName === "daily-report") {
 
+      // 🚫 Restrict to one channel
+      if (interaction.channelId !== ALLOWED_CHANNEL_ID) {
+        return interaction.reply({
+          content: "❌ This command can only be used in the designated channel.",
+          ephemeral: true,
+        });
+      }
+
+      // ✅ Show modal
       const modal = new ModalBuilder()
         .setCustomId("dailyReportModal")
         .setTitle("Daily Report");
 
       const date = new TextInputBuilder()
         .setCustomId("date")
-        .setLabel("Date (e.g. 2026-04-28)")
+        .setLabel("Date (e.g. 28.04.2026)")
         .setStyle(TextInputStyle.Short)
         .setRequired(true);
 
@@ -65,6 +84,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
   if (interaction.isModalSubmit()) {
     if (interaction.customId === "dailyReportModal") {
 
+      // (Optional extra safety)
+      if (interaction.channelId !== ALLOWED_CHANNEL_ID) return;
+
       const date = interaction.fields.getTextInputValue("date");
       const summary = interaction.fields.getTextInputValue("summary");
       const projects = interaction.fields.getTextInputValue("projects");
@@ -92,9 +114,7 @@ ${steps}
         ephemeral: true,
       });
 
-      const channel = interaction.guild.channels.cache.find(
-        c => c.name === "daily-reports"
-      );
+      const channel = interaction.guild.channels.cache.get(ALLOWED_CHANNEL_ID);
 
       if (channel) {
         channel.send(report);
