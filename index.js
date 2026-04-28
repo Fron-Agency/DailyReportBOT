@@ -19,6 +19,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
         .setCustomId("dailyReportModal")
         .setTitle("Daily Report");
 
+      const date = new TextInputBuilder()
+        .setCustomId("date")
+        .setLabel("Date (e.g. 2026-04-28)")
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true);
+
       const summary = new TextInputBuilder()
         .setCustomId("summary")
         .setLabel("Summary")
@@ -43,12 +49,13 @@ client.on(Events.InteractionCreate, async (interaction) => {
         .setStyle(TextInputStyle.Paragraph)
         .setRequired(true);
 
+      const row0 = new ActionRowBuilder().addComponents(date);
       const row1 = new ActionRowBuilder().addComponents(summary);
       const row2 = new ActionRowBuilder().addComponents(projects);
       const row3 = new ActionRowBuilder().addComponents(issues);
       const row4 = new ActionRowBuilder().addComponents(steps);
 
-      modal.addComponents(row1, row2, row3, row4);
+      modal.addComponents(row0, row1, row2, row3, row4);
 
       await interaction.showModal(modal);
     }
@@ -58,13 +65,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
   if (interaction.isModalSubmit()) {
     if (interaction.customId === "dailyReportModal") {
 
+      const date = interaction.fields.getTextInputValue("date");
       const summary = interaction.fields.getTextInputValue("summary");
       const projects = interaction.fields.getTextInputValue("projects");
       const issues = interaction.fields.getTextInputValue("issues") || "None";
       const steps = interaction.fields.getTextInputValue("steps");
 
       const report = `
-**📅 Daily Report — ${interaction.user.username}**
+**Daily Report — ${date} - ${interaction.user.username}**
 
 **Summary**
 ${summary}
